@@ -1,0 +1,9 @@
+{
+  "start_gripper": "hande",
+  "tasks": [
+    {"task_type": "moveto", "target": "safe_sample_transport"}
+  ],
+  "poses": {
+    "safe_sample_transport": [79.72, -69.5, -81.91, -117.92, -268.05, -157.15]
+  }
+}
