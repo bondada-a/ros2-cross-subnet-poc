@@ -1,0 +1,15 @@
+[send-goal] copying goal.json and sender script into ws2_client...
+[send-goal] invoking Python action client from inside ws2_client...
+[INFO] [1777404056.522759718] [xsub_poc_goal_sender]: waiting for /beambot_execution action server (timeout 20.0s)...
+[INFO] [1777404057.273888584] [xsub_poc_goal_sender]: sending goal...
+[INFO] [1777404057.473556874] [xsub_poc_goal_sender]: goal accepted (id=0xb5cf2bbc4dc24e5f...)
+[INFO] [1777404057.477883039] [xsub_poc_goal_sender]: feedback: step=0 action='Initializing MoveIt' progress=0% gripper='hande' msg='Executing: Initializing MoveIt'
+[INFO] [1777404069.104011275] [xsub_poc_goal_sender]: feedback: step=1 action='batch[1]: moveto' progress=100% gripper='hande' msg='Executing: batch[1]: moveto'
+[INFO] [1777404071.786890865] [xsub_poc_goal_sender]: feedback: step=1 action='' progress=100% gripper='hande' msg='Task completed'
+
+============================================================
+RESULT STATUS: SUCCEEDED
+  success:        True
+  error_message:  (none)
+  completed:      1/1 steps
+============================================================

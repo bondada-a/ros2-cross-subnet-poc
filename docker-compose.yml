@@ -1,0 +1,109 @@
+# Docker Compose definition for the cross-subnet ROS 2 PoC.
+#
+# Three containers on two isolated Docker networks that simulate the
+# production ws2 <-> robot VM topology:
+#
+#   ws2_client  (net_a: 10.10.1.10) --+
+#                                     |
+#                               +---- router (10.10.1.254, 10.10.2.254)
+#                                     |
+#   ros_server  (net_b: 10.10.2.10) --+
+#
+# Bring up:      docker compose up -d --build
+# Teardown:      docker compose down
+# Run demo:      bash demo/run-demo.sh
+#
+# The router defaults to Stage 1 (DENY). Stage scripts switch it at runtime:
+#   docker compose exec router /router/firewall-stage1-deny.sh
+#   docker compose exec router /router/firewall-stage2-allow.sh
+#   docker compose exec router /router/firewall-stage3-tcponly.sh
+
+networks:
+  net_a:
+    name: xsub_net_a
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.1.0/24
+          gateway: 10.10.1.1
+  net_b:
+    name: xsub_net_b
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.2.0/24
+          gateway: 10.10.2.1
+
+services:
+  router:
+    # Alpine + iptables firewall bridging net_a and net_b. Its iptables
+    # rules (in Stage 2) are the artifact this whole PoC exists to produce.
+    container_name: router
+    image: ros2xsub-router:dev
+    build:
+      context: ./router
+    hostname: router
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      net.ipv4.ip_forward: "1"
+    networks:
+      net_a:
+        ipv4_address: 10.10.1.254
+      net_b:
+        ipv4_address: 10.10.2.254
+    restart: "no"
+
+  ros_server:
+    # Wraps the production ghcr.io/bondada-a/beambot_img_v2 image. Runs
+    # Fast DDS Discovery Server + beambot orchestrator with fake hardware.
+    container_name: ros_server
+    image: ros2xsub-server:dev
+    build:
+      context: ./ros_server
+    hostname: ros_server
+    cap_add:
+      - NET_ADMIN  # needed for `ip route add 10.10.1.0/24 via 10.10.2.254`
+    networks:
+      net_b:
+        ipv4_address: 10.10.2.10
+    volumes:
+      # Mount the Fast DDS XML profile as a read-only volume so edits to
+      # the profile take effect on the next container restart without
+      # rebuilding the image.
+      - ./dds:/dds:ro
+    # Add return route to net_a before beambot starts. Done via a wrapper
+    # so the existing entrypoint.sh doesn't need to know about routing.
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        ip route add 10.10.1.0/24 via 10.10.2.254 || true
+        exec /ros_server/entrypoint.sh
+    depends_on:
+      - router
+    restart: "no"
+
+  ws2_client:
+    # Ubuntu + pixi + RoboStack ROS, matching the jennmald/cms-ros-client
+    # environment on the real ws2 workstation.
+    container_name: ws2_client
+    image: ros2xsub-ws2client:dev
+    build:
+      context: ./ws2_client
+    hostname: ws2_client
+    cap_add:
+      - NET_ADMIN
+    networks:
+      net_a:
+        ipv4_address: 10.10.1.10
+    volumes:
+      - ./dds:/dds:ro
+    environment:
+      # Entrypoint reads this and adds the static route automatically.
+      WS2_ROUTE_TO: "10.10.2.0/24 via 10.10.1.254"
+    depends_on:
+      - router
+    restart: "no"

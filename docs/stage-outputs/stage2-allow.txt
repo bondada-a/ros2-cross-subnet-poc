@@ -1,0 +1,18 @@
+--- topics ---
+/beambot/current_gripper
+/beambot/execution_state
+/object_detection_status
+/parameter_events
+/rosout
+/tf
+/tf_static
+--- actions ---
+/beambot_endeffector
+/beambot_execution
+/beambot_moveto
+/beambot_pick_sample
+/beambot_pipettor
+/beambot_place_sample
+/beambot_toolexchange
+/beambot_vision_moveto
+/beambot_vision_scan
