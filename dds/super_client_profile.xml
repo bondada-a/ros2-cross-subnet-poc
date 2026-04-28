@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Fast DDS profile consumed by BOTH the ros_server and ws2_client containers.
+
+  What this does:
+    Configures every Fast DDS participant in the process as a SUPER_CLIENT
+    that registers with a Discovery Server at 10.10.2.10:11811 (UDP) for
+    metadata exchange. Once registered, participants also see each other
+    directly (full graph visibility).
+
+  What this intentionally does NOT do:
+    * Pin participant data ports (Fast DDS picks ephemerals in the default
+      range around 7400). For the PoC we accept this and let IT open a
+      wider UDP range (7400-7500). Pinning is doable but adds XML
+      complexity that distracts from the demo's main point.
+    * Disable shared memory or other transports. Default transports are
+      fine; the router is UDP-only, so SHM cannot traverse the subnet
+      anyway.
+
+  How it is loaded:
+    FASTRTPS_DEFAULT_PROFILES_FILE=/path/to/this.xml
+    (plus ROS_DISCOVERY_SERVER=10.10.2.10:11811 for the ros2 CLI)
+
+  Why "SUPER_CLIENT" vs "CLIENT":
+    CLIENT only sees participants advertised by the Discovery Server.
+    SUPER_CLIENT also participates in peer-to-peer discovery, so two
+    SUPER_CLIENTs can see each other's topics directly without the server
+    relaying everything. This matches what a ROS graph normally provides.
+
+  About the `prefix` value:
+    The 12-byte prefix below is Fast DDS's canonical "example" server
+    prefix, corresponding to the Discovery Server launched with "-i 0".
+    The `fastdds discovery -i 0 ...` CLI in ros_server/entrypoint.sh
+    auto-generates this same prefix, so client and server match.
+-->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+
+    <participant profile_name="super_client_profile" is_default_profile="true">
+        <rtps>
+            <builtin>
+                <discovery_config>
+                    <discoveryProtocol>SUPER_CLIENT</discoveryProtocol>
+                    <discoveryServersList>
+                        <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+                            <metatrafficUnicastLocatorList>
+                                <locator>
+                                    <udpv4>
+                                        <address>10.10.2.10</address>
+                                        <port>11811</port>
+                                    </udpv4>
+                                </locator>
+                            </metatrafficUnicastLocatorList>
+                        </RemoteServer>
+                    </discoveryServersList>
+                </discovery_config>
+            </builtin>
+        </rtps>
+    </participant>
+
+</profiles>

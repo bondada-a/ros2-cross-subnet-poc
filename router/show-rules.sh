@@ -1,7 +1,7 @@
 #!/bin/bash
 # Human-readable dump of the current FORWARD chain -- use during the demo
 # to show IT exactly which rules are in effect at each stage.
-set -euo pipefail
+set -eo pipefail
 
 echo "========== FORWARD chain =========="
 iptables -L FORWARD -n -v --line-numbers

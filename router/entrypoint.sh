@@ -5,13 +5,13 @@
 #   docker exec router /router/firewall-stage2-allow.sh
 #   docker exec router /router/firewall-stage3-tcponly.sh
 #   docker exec router /router/firewall-stage1-deny.sh
-set -euo pipefail
+set -eo pipefail
 
 # Packet forwarding must be enabled at container creation because
 # /proc/sys/net/ipv4/ip_forward is read-only once the container starts.
 # The compose / docker-run layer sets it via --sysctl; we only verify.
 ip_forward="$(cat /proc/sys/net/ipv4/ip_forward)"
-if [[ "${ip_forward}" != "1" ]]; then
+if [ "${ip_forward}" != "1" ]; then
     echo "[router] FATAL: ip_forward=${ip_forward}, expected 1" >&2
     echo "[router] run this container with --sysctl net.ipv4.ip_forward=1" >&2
     exit 1

@@ -6,7 +6,7 @@
 #   * Everything else is dropped silently (timeouts, not RSTs)
 #
 # After running this, cross-subnet TCP and UDP should time out.
-set -euo pipefail
+set -eo pipefail
 
 # Flush all existing rules in every table we touch, so this script is
 # idempotent and re-running it produces a known state.
